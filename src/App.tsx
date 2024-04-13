@@ -1,9 +1,23 @@
 import "./App.css";
 import "./reset.css";
-import { useState } from "react";
+import { MouseEvent, useState } from "react";
+
+interface Product {
+  id: string;
+  type: string;
+  name: string;
+  nameKor: string;
+  price: number;
+  imageUrl: string;
+}
+
+interface Order {
+  id: string;
+  count: number;
+}
 
 function App() {
-  const [products] = useState([
+  const [products] = useState<Product[]>([
     {
       id: "101",
       type: "beverage",
@@ -69,13 +83,12 @@ function App() {
     });
   };
 
-  const [orderList, setOrderList] = useState([]);
+  const [orderList, setOrderList] = useState<Order[]>([]);
 
-  const handleProductClick = (e, product) => {
-    console.log(
-      "[ App/handleProductClick : 76, james ] product click =",
-      product,
-    );
+  const handleProductClick = (
+    _e: MouseEvent<HTMLLIElement>,
+    product: Product,
+  ) => {
     setOrderList((prevState) => {
       if (prevState.length === 0) {
         return [
@@ -111,6 +124,42 @@ function App() {
           ];
         }
       }
+    });
+  };
+
+  const handlePlusClick = (
+    _e: MouseEvent<HTMLButtonElement>,
+    orderItem: Order,
+  ) => {
+    setOrderList((prevState) => {
+      return prevState.map((order) => {
+        if (order.id === orderItem.id) {
+          return {
+            ...order,
+            count: order.count + 1,
+          };
+        } else {
+          return order;
+        }
+      });
+    });
+  };
+
+  const handleMinusClick = (
+    _e: MouseEvent<HTMLButtonElement>,
+    orderItem: Order,
+  ) => {
+    setOrderList((prevState) => {
+      return prevState.map((order) => {
+        if (order.id === orderItem.id && order.count > 0) {
+          return {
+            ...order,
+            count: order.count - 1,
+          };
+        } else {
+          return order;
+        }
+      });
     });
   };
 
@@ -151,24 +200,45 @@ function App() {
             <label>수량</label>
             <label>소계</label>
           </div>
-          {orderList.map((item) => {
-            const product = products.find((product) => product.id === item.id);
-            return (
-              <div
-                key={item.id}
-                className={"grid grid-cols-3 h-10 items-center text-sm"}
-              >
-                {/*<p>{product.id}</p>*/}
-                <label>{product?.nameKor}</label>
-                <div>
-                  {/*<button>-</button>*/}
-                  <label>{item.count}</label>
-                  {/*<button>+</button>*/}
+          {orderList.length > 0 &&
+            orderList.map((item) => {
+              const product = products.find(
+                (product) => product.id === item.id,
+              );
+              if (!product) return;
+              return (
+                <div
+                  key={item.id}
+                  className={"grid grid-cols-3 h-10 items-center text-sm"}
+                >
+                  <label>{product?.nameKor}</label>
+                  <div className={"flex items-center gap-x-2"}>
+                    <button
+                      name={"minus"}
+                      onClick={(e) => handleMinusClick(e, item)}
+                      className={
+                        "w-6 h-7 leading-9 px-4.5 text-sm text-white rounded-md cursor-pointer bg-cyan-900 flex justify-center items-center"
+                      }
+                    >
+                      -
+                    </button>
+                    <label>{item.count}</label>
+                    <button
+                      name={"plus"}
+                      onClick={(e) => handlePlusClick(e, item)}
+                      className={
+                        "w-6 h-7 leading-9 px-4.5 text-sm text-white rounded-md cursor-pointer bg-cyan-900 flex justify-center items-center"
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                  <label>
+                    {convertNumType(item.count * product?.price)} 원
+                  </label>
                 </div>
-                <label>{convertNumType(item.count * product?.price)} 원</label>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </section>
     </main>
